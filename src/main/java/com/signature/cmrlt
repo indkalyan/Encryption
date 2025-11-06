@@ -1,0 +1,53 @@
+### 1. Generate RSA Key Pair (2048-bit)
+POST http://localhost:8080/api/keys
+Content-Type: application/json
+
+{
+  "keySize": 2048
+}
+
+### Store the response keyId and encryptedPrivateKeyBase64 for next requests
+
+### 2. Fetch Public Key by ID
+GET http://localhost:8080/api/keys/1
+
+### 3. Create Digital Signature
+POST http://localhost:8080/api/signatures
+Content-Type: application/json
+
+{
+  "keyId": 1,
+  "data": "This is the message to be signed",
+  "encryptedPrivateKeyBase64": "PASTE_ENCRYPTED_PRIVATE_KEY_HERE"
+}
+
+### Store the response signatureId for verification
+
+### 4a. Retrieve Signature Details
+GET http://localhost:8080/api/signatures/1
+
+### 4b. Verify Signature
+POST http://localhost:8080/api/signatures/1?action=verify
+Content-Type: application/json
+
+{
+  "signatureId": 1,
+  "data": "This is the message to be signed"
+}
+
+### Test with wrong data (should fail verification)
+POST http://localhost:8080/api/signatures/1?action=verify
+Content-Type: application/json
+
+{
+  "signatureId": 1,
+  "data": "This is different data"
+}
+
+### Generate 4096-bit key
+POST http://localhost:8080/api/keys
+Content-Type: application/json
+
+{
+  "keySize": 4096
+}
