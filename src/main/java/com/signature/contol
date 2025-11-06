@@ -1,0 +1,83 @@
+package com.signature.controller;
+
+import com.signature.dto.*;
+import com.signature.service.SignatureService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api")
+@RequiredArgsConstructor
+public class SignatureController {
+
+    private final SignatureService signatureService;
+
+    /**
+     * 1. Generate RSA key pair
+     * POST /api/keys
+     */
+    @PostMapping("/keys")
+    public ResponseEntity<GenerateKeyResponse> generateKeyPair(
+            @Valid @RequestBody GenerateKeyRequest request) {
+        GenerateKeyResponse response = signatureService.generateKeyPair(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 2. Fetch public key by ID
+     * GET /api/keys/{keyId}
+     */
+    @GetMapping("/keys/{keyId}")
+    public ResponseEntity<PublicKeyResponse> getPublicKey(@PathVariable Long keyId) {
+        PublicKeyResponse response = signatureService.getPublicKey(keyId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 3. Create digital signature
+     * POST /api/signatures
+     */
+    @PostMapping("/signatures")
+    public ResponseEntity<CreateSignatureResponse> createSignature(
+            @Valid @RequestBody CreateSignatureRequest request) {
+        CreateSignatureResponse response = signatureService.createSignature(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /**
+     * 4a. Retrieve signature and public key
+     * GET /api/signatures/{signatureId}
+     */
+    @GetMapping("/signatures/{signatureId}")
+    public ResponseEntity<SignatureDetailsResponse> getSignature(
+            @PathVariable Long signatureId) {
+        SignatureDetailsResponse response = signatureService.getSignature(signatureId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 4b. Verify signature
+     * POST /api/signatures/{signatureId}?action=verify
+     */
+    @PostMapping("/signatures/{signatureId}")
+    public ResponseEntity<VerifySignatureResponse> verifySignature(
+            @PathVariable Long signatureId,
+            @RequestParam(name = "action", required = true) String action,
+            @Valid @RequestBody VerifySignatureRequest request) {
+        
+        if (!"verify".equalsIgnoreCase(action)) {
+            return ResponseEntity.badRequest().body(
+                new VerifySignatureResponse(false, "Invalid action parameter. Use 'action=verify'")
+            );
+        }
+
+        // Override signature ID from path
+        request.setSignatureId(signatureId);
+        
+        VerifySignatureResponse response = signatureService.verifySignature(request);
+        return ResponseEntity.ok(response);
+    }
+}
