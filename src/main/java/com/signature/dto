@@ -1,0 +1,95 @@
+package com.signature.dto;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+// Request to generate key pair
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class GenerateKeyRequest {
+    @NotNull(message = "Key size is required")
+    @Min(value = 2048, message = "Key size must be at least 2048")
+    @Max(value = 4096, message = "Key size must not exceed 4096")
+    private Integer keySize;
+}
+
+// Response after generating key pair
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class GenerateKeyResponse {
+    private Long keyId;
+    private String publicKeyPem;
+    private String encryptedPrivateKeyBase64;
+}
+
+// Response for fetching public key
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class PublicKeyResponse {
+    private Long keyId;
+    private String publicKeyPem;
+    private Integer keySize;
+}
+
+// Request to create signature
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateSignatureRequest {
+    @NotNull(message = "Key ID is required")
+    private Long keyId;
+    
+    @NotBlank(message = "Data is required")
+    private String data;
+    
+    @NotBlank(message = "Encrypted private key is required")
+    private String encryptedPrivateKeyBase64;
+}
+
+// Response after creating signature
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class CreateSignatureResponse {
+    private Long signatureId;
+    private String signatureBase64;
+}
+
+// Response for fetching signature
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class SignatureDetailsResponse {
+    private Long signatureId;
+    private String signatureBase64;
+    private String publicKeyPem;
+}
+
+// Request to verify signature
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class VerifySignatureRequest {
+    @NotNull(message = "Signature ID is required")
+    private Long signatureId;
+    
+    @NotBlank(message = "Data is required")
+    private String data;
+}
+
+// Response after verifying signature
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class VerifySignatureResponse {
+    private boolean valid;
+    private String message;
+}
