@@ -1,0 +1,203 @@
+# Secure RSA Signature Service
+
+A Spring Boot REST API that provides RSA key generation, digital signature creation, and signature verification with AES encryption for private key transport.
+
+## Features
+
+✅ **RSA Key Pair Generation** (2048-4096 bits)  
+✅ **AES-256-GCM Private Key Encryption**  
+✅ **SHA-512 with RSA Digital Signatures**  
+✅ **Signature Verification**  
+✅ **H2 In-Memory Database**  
+✅ **BouncyCastle Crypto Provider**  
+✅ **JSR-303 Bean Validation**
+
+## Tech Stack
+
+- **Java 17+**
+- **Spring Boot 3.2.0**
+- **Spring Data JPA**
+- **H2 Database** (in-memory)
+- **BouncyCastle** 1.70
+- **Lombok**
+- **Maven**
+
+## Project Structure
+
+```
+com.signature/
+├── RsaSignatureApplication.java   # Main application
+├── controller/
+│   └── SignatureController.java   # REST endpoints
+├── service/
+│   ├── SignatureService.java      # Business logic
+│   └── CryptoService.java          # Cryptography operations
+├── entity/
+│   ├── KeyPairEntity.java          # Key pair JPA entity
+│   └── SignatureEntity.java        # Signature JPA entity
+├── repository/
+│   ├── KeyPairRepository.java      # Key pair repository
+│   └── SignatureRepository.java    # Signature repository
+├── dto/
+│   └── [Request/Response DTOs]     # Data transfer objects
+└── exception/
+    └── GlobalExceptionHandler.java # Error handling
+```
+
+## API Endpoints
+
+### 1. Generate RSA Key Pair
+**POST** `/api/keys`
+
+Request:
+```json
+{
+  "keySize": 2048
+}
+```
+
+Response:
+```json
+{
+  "keyId": 1,
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\n...",
+  "encryptedPrivateKeyBase64": "..."
+}
+```
+
+### 2. Fetch Public Key
+**GET** `/api/keys/{keyId}`
+
+Response:
+```json
+{
+  "keyId": 1,
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\n...",
+  "keySize": 2048
+}
+```
+
+### 3. Create Digital Signature
+**POST** `/api/signatures`
+
+Request:
+```json
+{
+  "keyId": 1,
+  "data": "Message to sign",
+  "encryptedPrivateKeyBase64": "..."
+}
+```
+
+Response:
+```json
+{
+  "signatureId": 1,
+  "signatureBase64": "..."
+}
+```
+
+### 4a. Retrieve Signature
+**GET** `/api/signatures/{signatureId}`
+
+Response:
+```json
+{
+  "signatureId": 1,
+  "signatureBase64": "...",
+  "publicKeyPem": "-----BEGIN PUBLIC KEY-----\n..."
+}
+```
+
+### 4b. Verify Signature
+**POST** `/api/signatures/{signatureId}?action=verify`
+
+Request:
+```json
+{
+  "signatureId": 1,
+  "data": "Message to verify"
+}
+```
+
+Response:
+```json
+{
+  "valid": true,
+  "message": "Signature is valid"
+}
+```
+
+## Security Features
+
+### Private Key Encryption
+- Private keys are encrypted using **AES-256-GCM** before storage
+- Each encryption uses a unique random 256-bit AES key
+- 12-byte random IV for GCM mode
+- Format: `BASE64(AES_KEY || IV || ENCRYPTED_KEY)`
+
+### Digital Signatures
+- Algorithm: **SHA-512 with RSA**
+- Data is hashed with SHA-512 before signing
+- Signatures stored in Base64 format
+
+### Key Sizes
+- Minimum: 2048 bits
+- Maximum: 4096 bits
+- Validated using JSR-303 constraints
+
+## Running the Application
+
+### Prerequisites
+- Java 17 or higher
+- Maven 3.6+
+
+### Build
+```bash
+mvn clean install
+```
+
+### Run
+```bash
+mvn spring-boot:run
+```
+
+The application will start on `http://localhost:8080`
+
+### H2 Console
+Access the H2 database console at: `http://localhost:8080/h2-console`
+
+- JDBC URL: `jdbc:h2:mem:signaturedb`
+- Username: `sa`
+- Password: _(empty)_
+
+## Testing the API
+
+Use the provided `test-requests.http` file with your IDE (IntelliJ IDEA, VS Code REST Client) or use curl/Postman.
+
+### Example Flow
+
+1. Generate a key pair
+2. Save the returned `keyId` and `encryptedPrivateKeyBase64`
+3. Create a signature using the encrypted private key
+4. Verify the signature with the original data
+5. Try verifying with different data (should fail)
+
+## Configuration
+
+Edit `application.properties` to customize:
+- Server port
+- Database configuration
+- Logging levels
+
+## Notes
+
+- The service uses **in-memory H2 database** - data is lost on restart
+- Private keys are **never stored unencrypted**
+- Clients must securely store the encrypted private key returned during key generation
+- SHA-512 provides strong cryptographic hashing
+- BouncyCastle provides robust RSA and AES implementations
+
+## License
+
+Educational project for learning Spring Boot cryptography integration.
